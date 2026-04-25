@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員註冊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0a;
+      --bg-card: #141414;
+      --accent-gold: #d4a853;
+      --accent-copper: #b87333;
+      --text-primary: #f5f5f5;
+      --text-secondary: #8a8a8a;
+      --border-subtle: #2a2a2a;
+      --error: #e74c3c;
+      --success: #27ae60;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--bg-dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background-image: 
+        radial-gradient(ellipse at 20% 80%, rgba(212, 168, 83, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(184, 115, 51, 0.06) 0%, transparent 50%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.8rem;
+      color: var(--text-primary);
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      display: block;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    label .required {
+      color: var(--accent-gold);
+      margin-left: 2px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15);
+    }
+
+    input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238a8a8a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 44px;
+    }
+
+    select option {
+      background: var(--bg-dark);
+      color: var(--text-primary);
+    }
+
+    .radio-group,
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .radio-item,
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-subtle);
+      background: var(--bg-dark);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    input[type="radio"] {
+      border-radius: 50%;
+    }
+
+    input[type="checkbox"] {
+      border-radius: 4px;
+    }
+
+    input[type="radio"]:checked,
+    input[type="checkbox"]:checked {
+      border-color: var(--accent-gold);
+      background: var(--accent-gold);
+    }
+
+    input[type="radio"]:checked {
+      box-shadow: inset 0 0 0 4px var(--bg-dark);
+    }
+
+    input[type="checkbox"]:checked {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230a0a0a' viewBox='0 0 16 16'%3E%3Cpath d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .radio-label,
+    .checkbox-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .range-container {
+      margin-top: 8px;
+    }
+
+    .range-value {
+      text-align: center;
+      color: var(--accent-gold);
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--accent-gold);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(212, 168, 83, 0.4);
+      transition: transform 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    input[type="color"] {
+      width: 56px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: none;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border: 2px solid var(--border-subtle);
+      border-radius: 6px;
+    }
+
+    .color-value {
+      color: var(--text-secondary);
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .file-upload {
+      border: 2px dashed var(--border-subtle);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 8px;
+    }
+
+    .file-upload:hover {
+      border-color: var(--accent-gold);
+      background: rgba(212, 168, 83, 0.05);
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .file-upload-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .file-upload-text {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .file-upload-text strong {
+      color: var(--accent-gold);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-copper));
+      border: none;
+      border-radius: 8px;
+      padding: 16px 24px;
+      color: var(--bg-dark);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 16px;
+      letter-spacing: 0.05em;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(212, 168, 83, 0.3);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 24px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .form-footer a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .form-footer a:hover {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-card {
+        padding: 24px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>會員註冊</h1>
+      <p>加入我們的會員大家庭</p>
+    </header>
+
+    <div class="form-card">
+      <form action="#" method="POST" enctype="multipart/form-data">
+        <div class="form-row">
+          <div class="form-group">
+            <label>姓名 <span class="required">*</span></label>
+            <input type="text" name="name" placeholder="請輸入姓名" required>
+          </div>
+          <div class="form-group">
+            <label>電子郵件 <span class="required">*</span></label>
+            <input type="email" name="email" placeholder="example@mail.com" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>密碼 <span class="required">*</span></label>
+            <input type="password" name="password" placeholder="至少8個字元" required>
+          </div>
+          <div class="form-group">
+            <label>確認密碼 <span class="required">*</span></label>
+            <input type="password" name="confirm_password" placeholder="再次輸入密碼" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>電話</label>
+            <input type="tel" name="phone" placeholder="09xx-xxx-xxx">
+          </div>
+          <div class="form-group">
+            <label>出生日期</label>
+            <input type="date" name="birthdate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>地址</label>
+          <input type="text" name="address" placeholder="請輸入完整地址">
+        </div>
+
+        <div class="form-group">
+          <label>性別</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" name="gender" id="male" value="male">
+              <label class="radio-label" for="male">男性</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" name="gender" id="female" value="female">
+              <label class="radio-label" for="female">女性</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" name="gender" id="other" value="other">
+              <label class="radio-label" for="other">其他</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>興趣嗜好</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" name="hobbies" id="reading" value="reading">
+              <label class="checkbox-label" for="reading">閱讀</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" name="hobbies" id="music" value="music">
+              <label class="checkbox-label" for="music">音樂</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" name="hobbies" id="sports" value="sports">
+              <label class="checkbox-label" for="sports">運動</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" name="hobbies" id="travel" value="travel">
+              <label class="checkbox-label" for="travel">旅遊</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" name="hobbies" id="gaming" value="gaming">
+              <label class="checkbox-label" for="gaming">遊戲</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>國家</label>
+          <select name="country">
+            <option value="">請選擇國家</option>
+            <option value="tw">台灣</option>
+            <option value="hk">香港</option>
+            <option value="jp">日本</option>
+            <option value="kr">韓國</option>
+            <option value="sg">新加坡</option>
+            <option value="my">馬來西亞</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>年齡</label>
+          <div class="range-container">
+            <div class="range-value"><span id="ageValue">25</span> 歲</div>
+            <input type="range" name="age" id="ageRange" min="1" max="100" value="25">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>喜歡的顏色</label>
+          <div class="color-picker-wrapper">
+            <input type="color" name="favcolor" id="colorPicker" value="#d4a853">
+            <span class="color-value" id="colorValue">#d4a853</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>自我介紹</label>
+          <textarea name="bio" rows="4" placeholder="簡單介绍一下自己..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>上傳頭像</label>
+          <label class="file-upload">
+            <input type="file" name="avatar" accept="image/*">
+            <div class="file-upload-icon">📁</div>
+            <div class="file-upload-text">
+              <strong>點擊選擇檔案</strong> 或拖曳至此
+            </div>
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn">註冊帳號</button>
+      </form>
+
+      <div class="form-footer">
+        已經有帳號了？ <a href="#">登入</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ageRange = document.getElementById('ageRange');
+    const ageValue = document.getElementById('ageValue');
+    ageRange.addEventListener('input', function() {
+      ageValue.textContent = this.value;
+    });
+
+    const colorPicker = document.getElementById('colorPicker');
+    const colorValue = document.getElementById('colorValue');
+    colorPicker.addEventListener('input', function() {
+      colorValue.textContent = this.value;
+    });
+  </script>
+</body>
+</html>
