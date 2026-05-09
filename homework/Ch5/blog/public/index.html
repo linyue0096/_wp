@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads - OpenCode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    .sidebar-left {
+      width: 280px;
+      padding: 20px;
+      border-right: 1px solid #2e2e2e;
+      position: fixed;
+      height: 100vh;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      padding: 10px 0 30px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      margin: 4px 0;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background 0.2s;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: #1a1a1a;
+    }
+
+    .nav-item svg {
+      width: 26px;
+      height: 26px;
+      margin-right: 16px;
+    }
+
+    .post-btn {
+      width: 90%;
+      padding: 14px;
+      margin-top: 20px;
+      background: #0095f6;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .post-btn:hover {
+      background: #0084d9;
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      margin-right: 350px;
+      border-right: 1px solid #2e2e2e;
+      min-height: 100vh;
+    }
+
+    .feed-header {
+      padding: 16px;
+      border-bottom: 1px solid #2e2e2e;
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .feed-tabs {
+      display: flex;
+      gap: 40px;
+    }
+
+    .feed-tab {
+      padding: 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #8e8e8e;
+      position: relative;
+    }
+
+    .feed-tab.active {
+      color: #fff;
+    }
+
+    .feed-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #0095f6;
+      border-radius: 3px;
+    }
+
+    .post-composer {
+      padding: 16px;
+      border-bottom: 1px solid #2e2e2e;
+      display: flex;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .composer-input {
+      flex: 1;
+    }
+
+    .composer-input textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      resize: none;
+      outline: none;
+      min-height: 60px;
+    }
+
+    .composer-input textarea::placeholder {
+      color: #8e8e8e;
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .composer-icons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .composer-icon {
+      cursor: pointer;
+      color: #0095f6;
+    }
+
+    .post {
+      padding: 16px;
+      border-bottom: 1px solid #2e2e2e;
+      display: flex;
+      gap: 12px;
+    }
+
+    .post:hover {
+      background: #0a0a0a;
+    }
+
+    .post-content {
+      flex: 1;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .post-author {
+      font-weight: 600;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .post-username {
+      color: #8e8e8e;
+      font-size: 14px;
+    }
+
+    .post-text {
+      color: #fff;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .post-image {
+      margin-top: 12px;
+      border-radius: 16px;
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 12px;
+      max-width: 300px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #8e8e8e;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 30px;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: #1a1a1a;
+    }
+
+    .action-btn.liked {
+      color: #f02849;
+    }
+
+    .action-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .sidebar-right {
+      width: 350px;
+      padding: 20px;
+      position: fixed;
+      right: 0;
+      height: 100vh;
+    }
+
+    .profile-card {
+      background: #1a1a1a;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .profile-info h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .profile-info span {
+      color: #8e8e8e;
+      font-size: 14px;
+    }
+
+    .profile-stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 0;
+      border-top: 1px solid #2e2e2e;
+      border-bottom: 1px solid #2e2e2e;
+      margin-bottom: 16px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .stat-label {
+      color: #8e8e8e;
+      font-size: 13px;
+    }
+
+    .profile-bio {
+      color: #8e8e8e;
+      font-size: 14px;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .follow-btn, .edit-profile-btn {
+      width: 100%;
+      padding: 10px;
+      background: #0095f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .follow-btn.following {
+      background: #262626;
+      color: #fff;
+    }
+
+    .auth-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .auth-modal.show {
+      display: flex;
+    }
+
+    .auth-box {
+      background: #000;
+      border: 1px solid #2e2e2e;
+      border-radius: 20px;
+      padding: 40px;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    .auth-box h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      background: #121212;
+      border: 1px solid #2e2e2e;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .auth-input:focus {
+      border-color: #0095f6;
+    }
+
+    .auth-submit {
+      width: 100%;
+      padding: 12px;
+      background: #0095f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .auth-switch {
+      text-align: center;
+      color: #8e8e8e;
+    }
+
+    .auth-switch a {
+      color: #0095f6;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8e8e8e;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    @media (max-width: 1000px) {
+      .sidebar-right {
+        display: none;
+      }
+      .main-content {
+        margin-right: 0;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .sidebar-left {
+        width: 70px;
+      }
+      .sidebar-left .logo, .sidebar-left .nav-text, .sidebar-left .post-btn span {
+        display: none;
+      }
+      .main-content {
+        margin-left: 70px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar-left">
+      <a href="/" class="logo">𝕏</a>
+      <a href="#" class="nav-item active" onclick="showFeed('following')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.46 7.57L12.357 2.115c-.223-.12-.49-.12-.713 0L1.543 7.57c-.364.197-.5.652-.303 1.017.135.25.394.393.66.393.122 0 .244-.03.356-.09l.336-.18L11.46 20.63c.223.12.49.18.766.18.276 0 .543-.06.766-.18l8.552-4.866.336.18c.112.06.234.09.356.09.266 0 .525-.142.66-.393.197-.364.06-.82-.303-1.017z"/></svg>
+        <span class="nav-text">首頁</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showFeed('explore')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5s8.5 3.806 8.5 8.5c0 1.986-.682 3.815-1.824 5.262l4.781 4.781-1.414 1.414-4.781-4.781c-1.447 1.142-3.276 1.824-5.262 1.824-4.694 0-8.5-3.806-8.5-8.5z"/></svg>
+        <span class="nav-text">探索</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showProfile()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <span class="nav-text">個人資料</span>
+      </a>
+      <div id="authSection" style="margin-top:10px;">
+        <a href="#" class="nav-item" onclick="showAuthModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          <span class="nav-text" id="authBtnText">登入</span>
+        </a>
+        <a href="#" class="nav-item" onclick="isRegisterMode=true;showAuthModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span class="nav-text">註冊</span>
+        </a>
+      </div>
+      <div id="logoutSection" style="display:none;margin-top:10px;">
+        <a href="#" class="nav-item" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          <span class="nav-text">登出</span>
+        </a>
+      </div>
+      <button class="post-btn" onclick="showComposer()">
+        <span>發布</span>
+      </button>
+    </div>
+
+    <div class="main-content">
+      <div class="feed-header">
+        <div id="userHeader" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #2e2e2e;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img id="headerAvatar" class="avatar" style="width:48px;height:48px;">
+            <div>
+              <div id="headerName" style="font-weight:600;font-size:18px;"></div>
+              <div id="headerUsername" style="color:#8e8e8e;"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:20px;">
+            <div><span id="headerPosts" style="font-weight:600"></span> <span style="color:#8e8e8e">貼文</span></div>
+            <div><span id="headerFollowers" style="font-weight:600"></span> <span style="color:#8e8e8e">粉絲</span></div>
+            <div><span id="headerFollowing" style="font-weight:600"></span> <span style="color:#8e8e8e">追蹤中</span></div>
+          </div>
+          <button onclick="clearViewUser()" style="margin-top:12px;padding:8px 16px;background:#262626;border:none;border-radius:20px;color:#fff;cursor:pointer;">← 返回首頁</button>
+        </div>
+        <div class="feed-tabs">
+          <div class="feed-tab active" onclick="showFeed('following')">追蹤動態</div>
+          <div class="feed-tab" onclick="showFeed('explore')">探索</div>
+        </div>
+      </div>
+
+      <div id="composer" style="display:none;">
+        <div class="post-composer">
+          <img class="avatar" id="composerAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=default">
+          <div class="composer-input">
+            <textarea id="postContent" placeholder="有什麼新鮮事？"></textarea>
+            <div class="composer-actions">
+              <div class="composer-icons">
+                <span class="composer-icon">🖼️</span>
+              </div>
+              <button class="post-btn" style="width:auto;padding:8px 20px;" onclick="createPost()">發布</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="feed"></div>
+    </div>
+
+    <div class="sidebar-right">
+      <div class="profile-card" id="profileCard">
+        <div class="profile-header">
+          <img class="profile-avatar" id="sidebarAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=default">
+          <div class="profile-info">
+            <h3 id="sidebarName">Loading...</h3>
+            <span id="sidebarUsername">@loading</span>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <div class="stat-value" id="sidebarPosts">0</div>
+            <div class="stat-label">貼文</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="sidebarFollowing">0</div>
+            <div class="stat-label">追蹤中</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="sidebarFollowers">0</div>
+            <div class="stat-label">粉絲</div>
+          </div>
+        </div>
+        <div class="profile-bio" id="sidebarBio">載入中...</div>
+        <button class="follow-btn" id="sidebarFollowBtn" onclick="toggleFollow()">追蹤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-modal" id="authModal">
+    <div class="auth-box">
+      <h2 id="authTitle">登入</h2>
+      <form id="authForm" onsubmit="handleAuth(event)">
+        <input type="text" class="auth-input" id="username" placeholder="用戶名" required>
+        <input type="password" class="auth-input" id="password" placeholder="密碼" required>
+        <input type="text" class="auth-input" id="displayName" placeholder="顯示名稱（註冊用）" style="display:none;">
+        <button type="submit" class="auth-submit" id="authSubmit">登入</button>
+      </form>
+      <div class="auth-switch">
+        <span id="authSwitchText">還沒有帳號？</span>
+        <a onclick="toggleAuthMode()" id="authSwitchLink">註冊</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let isRegisterMode = false;
+    let currentFeed = 'following';
+    let viewingUserId = null;
+
+    async function api(endpoint, options = {}) {
+      const res = await fetch(endpoint, {
+        ...options,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...options.headers }
+      });
+      return res.json();
+    }
+
+    async function checkAuth() {
+      try {
+        const user = await api('/me');
+        if (user.id) {
+          currentUser = user;
+          document.getElementById('authBtnText').textContent = user.display_name || user.username;
+          document.getElementById('composerAvatar').src = user.avatar;
+          document.getElementById('authSection').style.display = 'none';
+          document.getElementById('logoutSection').style.display = 'block';
+          updateSidebarProfile(user);
+        }
+      } catch (e) {
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('logoutSection').style.display = 'none';
+      }
+      loadFeed();
+    }
+
+    async function logout() {
+      await api('/logout', { method: 'POST' });
+      currentUser = null;
+      document.getElementById('authSection').style.display = 'block';
+      document.getElementById('logoutSection').style.display = 'none';
+      clearViewUser();
+    }
+
+    async function loadFeed() {
+      const endpoint = currentFeed === 'following' ? '/feed' : '/posts';
+      const posts = await api(endpoint);
+      renderPosts(posts);
+    }
+
+    function renderPosts(posts) {
+      const feed = document.getElementById('feed');
+      if (!posts.length) {
+        feed.innerHTML = `<div class="empty-state"><h3>${currentFeed === 'following' ? '追蹤一些人來看到他們的貼文' : '還沒有任何貼文'}</h3><p>成為第一個發布的人吧！</p></div>`;
+        return;
+      }
+      feed.innerHTML = posts.map(post => `
+        <div class="post">
+          <img class="avatar" src="${post.avatar}" onclick="viewUser(${post.user_id})">
+          <div class="post-content">
+            <div class="post-header">
+              <a class="post-author" href="javascript:void(0)" onclick="viewUser(${post.user_id})">${post.display_name}</a>
+              <span class="post-username">@${post.username}</span>
+            </div>
+            <div class="post-text">${post.content}</div>
+            ${post.image_url ? `<img class="post-image" src="${post.image_url}">` : ''}
+            <div class="post-actions">
+              <div class="action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id}, ${post.liked})">
+                <svg viewBox="0 0 24 24" fill="${post.liked ? '#f02849' : 'currentColor'}"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938z"/></svg>
+                <span>${post.likes_count}</span>
+              </div>
+              <div class="action-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 2.761 1.891 5.212 4.662 6.236l8.054-4.46c.645-.357 1.113-.9 1.113-1.596 0-2.443-1.952-4.425-4.385-4.425h-.064z"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showFeed(type) {
+      currentFeed = type;
+      document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      loadFeed();
+    }
+
+    function showComposer() {
+      if (!currentUser) return showAuthModal();
+      document.getElementById('composer').style.display = 'block';
+    }
+
+    async function createPost() {
+      const content = document.getElementById('postContent').value;
+      if (!content.trim()) return;
+      await api('/posts', { method: 'POST', body: JSON.stringify({ content }) });
+      document.getElementById('postContent').value = '';
+      document.getElementById('composer').style.display = 'none';
+      loadFeed();
+    }
+
+    async function toggleLike(postId, liked) {
+      if (!currentUser) return showAuthModal();
+      const method = liked ? 'DELETE' : 'POST';
+      await api(`/posts/${postId}/like`, { method });
+      loadFeed();
+    }
+
+    function viewUser(userId) {
+      viewingUserId = userId;
+      document.getElementById('composer').style.display = 'none';
+      loadUserProfile(userId);
+    }
+
+    async function loadUserProfile(userId) {
+      const user = await api(`/users/${userId}`);
+      updateSidebarProfile(user);
+      updateUserHeader(user);
+      const posts = await api(`/users/${userId}/posts`);
+      renderPosts(posts);
+    }
+
+    function updateUserHeader(user) {
+      if (viewingUserId && viewingUserId !== (currentUser && currentUser.id)) {
+        document.getElementById('userHeader').style.display = 'block';
+        document.getElementById('headerAvatar').src = user.avatar;
+        document.getElementById('headerName').textContent = user.display_name || user.username;
+        document.getElementById('headerUsername').textContent = '@' + user.username;
+        document.getElementById('headerPosts').textContent = user.posts_count || 0;
+        document.getElementById('headerFollowers').textContent = user.followers_count || 0;
+        document.getElementById('headerFollowing').textContent = user.following_count || 0;
+        document.querySelector('.feed-tabs').style.display = 'none';
+      }
+    }
+
+    function clearViewUser() {
+      viewingUserId = null;
+      document.getElementById('userHeader').style.display = 'none';
+      document.querySelector('.feed-tabs').style.display = 'flex';
+      loadFeed();
+    }
+
+    function updateSidebarProfile(user) {
+      document.getElementById('sidebarAvatar').src = user.avatar;
+      document.getElementById('sidebarName').textContent = user.display_name || user.username;
+      document.getElementById('sidebarUsername').textContent = '@' + user.username;
+      document.getElementById('sidebarPosts').textContent = user.posts_count || 0;
+      document.getElementById('sidebarFollowing').textContent = user.following_count || 0;
+      document.getElementById('sidebarFollowers').textContent = user.followers_count || 0;
+      document.getElementById('sidebarBio').textContent = user.bio || '這個人很懶，什麼都沒寫';
+
+      const btn = document.getElementById('sidebarFollowBtn');
+      if (currentUser && currentUser.id === user.id) {
+        btn.style.display = 'none';
+      } else {
+        btn.style.display = 'block';
+        btn.textContent = user.is_following ? '已追蹤' : '追蹤';
+        btn.className = 'follow-btn' + (user.is_following ? ' following' : '');
+      }
+    }
+
+    async function toggleFollow() {
+      if (!currentUser || !viewingUserId) return;
+      const user = await api(`/users/${viewingUserId}`);
+      const method = user.is_following ? 'DELETE' : 'POST';
+      await api(`/follow/${viewingUserId}`, { method });
+      loadUserProfile(viewingUserId);
+    }
+
+    function showProfile() {
+      if (!currentUser) return showAuthModal();
+      viewingUserId = currentUser.id;
+      loadUserProfile(currentUser.id);
+    }
+
+    function showAuthModal() {
+      document.getElementById('authModal').classList.add('show');
+      document.getElementById('authTitle').textContent = isRegisterMode ? '註冊' : '登入';
+      document.getElementById('authSubmit').textContent = isRegisterMode ? '註冊' : '登入';
+      document.getElementById('authSwitchText').textContent = isRegisterMode ? '已有帳號？' : '還沒有帳號？';
+      document.getElementById('authSwitchLink').textContent = isRegisterMode ? '登入' : '註冊';
+      document.getElementById('displayName').style.display = isRegisterMode ? 'block' : 'none';
+    }
+
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      showAuthModal();
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const endpoint = isRegisterMode ? '/register' : '/login';
+      const body = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+      if (isRegisterMode) {
+        body.display_name = document.getElementById('displayName').value;
+      }
+
+      const res = await api(endpoint, { method: 'POST', body: JSON.stringify(body) });
+      if (res.error) {
+        alert(res.error);
+      } else {
+        document.getElementById('authModal').classList.remove('show');
+        checkAuth();
+      }
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
