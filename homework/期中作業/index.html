@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>俄羅斯方塊 - TETRIS</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a1a2e; color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh;
+}
+.hidden { display: none !important; }
+
+#menuScreen {
+  background: #16213e; border-radius: 20px; padding: 40px 50px;
+  text-align: center; box-shadow: 0 0 60px rgba(0,0,0,0.6);
+}
+#menuScreen h1 {
+  font-size: 42px; letter-spacing: 8px; color: #e94560;
+  margin-bottom: 8px; text-shadow: 0 0 20px rgba(233,69,96,0.3);
+}
+#menuScreen .sub { color: #666; font-size: 14px; margin-bottom: 30px; letter-spacing: 4px; }
+.menu-btn {
+  display: block; width: 260px; padding: 14px 0; margin: 10px auto;
+  border: none; border-radius: 10px; font-size: 18px; letter-spacing: 3px;
+  cursor: pointer; transition: .2s; color: #fff;
+}
+.menu-btn.single { background: #0f3460; }
+.menu-btn.ai { background: #533483; }
+.menu-btn.friend { background: #e94560; }
+.menu-btn.easy { background: #2d7d46; }
+.menu-btn.medium { background: #b8860b; }
+.menu-btn.hard { background: #8b2d2d; }
+.menu-btn.back { background: #333; font-size: 14px; padding: 10px 0; }
+.menu-btn:hover { filter: brightness(1.3); transform: translateY(-2px); }
+
+#roomScreen {
+  background: #16213e; border-radius: 20px; padding: 30px 40px;
+  text-align: center; box-shadow: 0 0 60px rgba(0,0,0,0.6); min-width: 340px;
+}
+#roomScreen h2 { font-size: 24px; color: #e94560; margin-bottom: 20px; letter-spacing: 4px; }
+#roomScreen input {
+  width: 200px; padding: 10px 14px; border: 2px solid #0f3460; border-radius: 8px;
+  background: #1a1a2e; color: #fff; font-size: 22px; text-align: center;
+  letter-spacing: 8px; outline: none;
+}
+#roomScreen input:focus { border-color: #e94560; }
+#roomStatus { margin: 10px 0; font-size: 13px; color: #aaa; min-height: 20px; }
+.room-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
+.room-btns button {
+  padding: 10px 24px; border: none; border-radius: 8px; font-size: 15px;
+  cursor: pointer; color: #fff; letter-spacing: 2px;
+}
+.room-btns .join-btn { background: #e94560; }
+.room-btns .create-btn { background: #533483; }
+.room-btns .back-btn { background: #333; }
+.room-btns button:hover { filter: brightness(1.2); }
+
+#gameWrapper {
+  background: #16213e; border-radius: 16px; padding: 20px 25px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5); display: inline-block;
+}
+#gameTopBar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; padding: 0 5px;
+}
+#gameTopBar h2 { font-size: 20px; letter-spacing: 4px; color: #e94560; }
+#gameTopBar .mode-tag {
+  font-size: 12px; padding: 3px 12px; border-radius: 20px;
+  background: #0f3460; color: #aaa; letter-spacing: 1px;
+}
+#gameTopBar .back-menu-btn {
+  background: none; border: 1px solid #444; color: #888; padding: 4px 14px;
+  border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+#gameTopBar .back-menu-btn:hover { border-color: #e94560; color: #e94560; }
+
+#boardsArea {
+  display: flex; gap: 15px; align-items: flex-start; justify-content: center;
+}
+.board-col { text-align: center; }
+.board-col .player-label {
+  font-size: 13px; color: #888; margin-bottom: 5px; letter-spacing: 2px;
+}
+canvas.game-board {
+  background: #0f3460; border: 2px solid #1a1a2e; border-radius: 6px; display: block;
+}
+
+#centerStats {
+  display: flex; flex-direction: column; gap: 8px; min-width: 90px; padding-top: 25px;
+  text-align: center;
+}
+.stat-item { background: #0f3460; border-radius: 8px; padding: 8px 10px; }
+.stat-item .label { font-size: 11px; color: #888; letter-spacing: 1px; }
+.stat-item .val { font-size: 20px; font-weight: bold; }
+.stat-item .val.p1 { color: #00f0f0; }
+.stat-item .val.p2 { color: #f0a000; }
+.vs-divider {
+  font-size: 18px; font-weight: bold; color: #444; letter-spacing: 4px; padding: 10px 0;
+}
+
+#sidebarCol {
+  display: flex; flex-direction: column; gap: 12px; min-width: 130px;
+}
+.side-box {
+  background: #0f3460; border-radius: 10px; padding: 10px 12px; text-align: center;
+}
+.side-box h3 { font-size: 12px; color: #888; margin-bottom: 4px; letter-spacing: 2px; }
+.side-box .val { font-size: 22px; font-weight: bold; color: #e94560; }
+.side-box .val.gold { color: #f0a000; }
+
+#controlsArea {
+  margin-top: 12px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+}
+#controlsArea .ctrl-btn {
+  width: 52px; height: 52px; background: #0f3460; border: none; border-radius: 10px;
+  color: #fff; font-size: 20px; cursor: pointer; user-select: none;
+  -webkit-user-select: none; touch-action: manipulation;
+}
+#controlsArea .ctrl-btn:active { background: #e94560; }
+#controlsArea .ctrl-btn.wide { width: 100px; font-size: 14px; }
+#controlsArea .ctrl-btn.action { background: #533483; }
+#controlsArea .ctrl-btn.action:active { background: #e94560; }
+#controlsArea .ctrl-btn.small { width: auto; padding: 0 12px; font-size: 13px; letter-spacing: 1px; }
+
+.overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center;
+  flex-direction: column; border-radius: 6px; gap: 12px;
+}
+.overlay.show { display: flex; }
+.overlay h2 { font-size: 26px; letter-spacing: 4px; }
+.overlay .sub-text { font-size: 13px; color: #aaa; }
+.overlay .ov-btn {
+  padding: 10px 24px; border: none; border-radius: 8px; font-size: 15px;
+  cursor: pointer; color: #fff; letter-spacing: 2px; margin-top: 5px;
+}
+.overlay .ov-btn.red { background: #e94560; }
+.overlay .ov-btn.red:hover { background: #c73652; }
+.overlay .ov-btn.purple { background: #533483; }
+#gameOverOverlay h2 { color: #e94560; }
+#pauseOverlay h2 { color: #00f0f0; }
+#winOverlay h2 { color: #f0a000; }
+
+#infoBar {
+  display: flex; justify-content: center; gap: 12px; margin-top: 10px; align-items: center;
+}
+#infoBar .info-tag {
+  font-size: 12px; padding: 4px 10px; border-radius: 10px;
+  background: #0f3460; color: #aaa; letter-spacing: 1px; cursor: pointer;
+  user-select: none; border: 1px solid transparent;
+}
+#infoBar .info-tag:hover { border-color: #e94560; }
+#infoBar .info-tag.on { border-color: #4f4; color: #4f4; }
+#infoBar .info-tag.off { border-color: #666; color: #666; }
+
+#instructionsArea {
+  margin-top: 10px; padding: 10px 14px; background: #0f3460; border-radius: 8px;
+  font-size: 12px; line-height: 1.8; color: #999; text-align: center;
+}
+#instructionsArea kbd {
+  background: #1a1a2e; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #00f0f0;
+}
+
+.board-wrapper { position: relative; display: inline-block; }
+
+#connStatus {
+  position: fixed; bottom: 10px; right: 10px;
+  font-size: 11px; padding: 4px 10px; border-radius: 10px;
+  background: #333; color: #888;
+}
+#connStatus.connected { background: #1a4a1a; color: #4f4; }
+#connStatus.disconnected { background: #4a1a1a; color: #f44; }
+
+.diff-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.diff-dot.easy { background: #4f4; }
+.diff-dot.medium { background: #ff0; }
+.diff-dot.hard { background: #f44; }
+</style>
+</head>
+<body>
+
+<div id="menuScreen">
+  <h1>TETRIS</h1>
+  <div class="sub">俄 羅 斯 方 塊</div>
+  <button class="menu-btn single" onclick="startMode('single')">🧑 單人模式</button>
+  <button class="menu-btn ai" onclick="showAIDifficulty()">🤖 人機對戰</button>
+  <button class="menu-btn friend" onclick="showRoomScreen()">👥 好友對戰</button>
+</div>
+
+<div id="roomScreen" class="hidden">
+  <h2>好 友 對 戰</h2>
+  <input id="roomCodeInput" type="text" maxlength="6" placeholder="000000" autocomplete="off">
+  <div id="roomStatus">請輸入 6 位數房間號碼</div>
+  <div class="room-btns">
+    <button class="join-btn" onclick="joinRoom()">加入房間</button>
+    <button class="create-btn" onclick="createRoom()">建立房間</button>
+    <button class="back-btn" onclick="hideRoomScreen()">返回</button>
+  </div>
+</div>
+
+<div id="gameWrapper" class="hidden">
+  <div id="gameTopBar">
+    <h2>TETRIS</h2>
+    <span class="mode-tag" id="modeTag">單人模式</span>
+    <button class="back-menu-btn" onclick="backToMenu()">✕ 選單</button>
+  </div>
+  <div id="boardsArea"></div>
+  <div id="infoBar">
+    <span class="info-tag on" id="ghostToggle">👻 輔助線 ON</span>
+  </div>
+  <div id="controlsArea">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="display:flex;gap:6px">
+        <button class="ctrl-btn" data-action="left">◀</button>
+        <button class="ctrl-btn" data-action="rotate">↻</button>
+        <button class="ctrl-btn" data-action="right">▶</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="ctrl-btn wide" data-action="drop">▼ 落下</button>
+        <button class="ctrl-btn wide action" id="pauseBtn">⏸ 暫停</button>
+      </div>
+    </div>
+  </div>
+  <div id="instructionsArea">
+    <kbd>←</kbd><kbd>→</kbd> 移動 &nbsp; <kbd>↑</kbd> 旋轉 &nbsp;
+    <kbd>↓</kbd> 加速 &nbsp; <kbd>空格</kbd> 落下 &nbsp;
+    <kbd>P</kbd> 暫停 &nbsp; <kbd>G</kbd> 輔助線
+  </div>
+</div>
+
+<div id="connStatus">● 離線</div>
+
+<script>
+const COLS = 10, ROWS = 20;
+const BS_SINGLE = 30, BS_VS = 25;
+
+const COLORS = [
+  null, '#00f0f0', '#f0f000', '#a000f0',
+  '#00f000', '#f00000', '#0000f0', '#f0a000'
+];
+
+const SHAPES = [
+  null,
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[0,1,1],[1,1,0]],
+  [[1,1,0],[0,1,1]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]]
+];
+
+function createState() {
+  return {
+    board: Array.from({length: ROWS}, () => Array(COLS).fill(0)),
+    score: 0, level: 1, lines: 0, gameOver: false,
+    piece: { shape: null, x: 0, y: 0, type: 0 },
+    nextType: 0, interval: null, paused: false
+  };
+}
+
+let mode = 'menu';
+let P = createState();
+let AI = createState();
+let friendData = null;
+let ws = null, wsConnected = false;
+let animId = null;
+let aiDifficulty = 'medium';
+let showGhost = true;
+
+const $ = id => document.getElementById(id);
+const menuScreen = $('menuScreen');
+const roomScreen = $('roomScreen');
+const gameWrapper = $('gameWrapper');
+const boardsArea = $('boardsArea');
+const connStatus = $('connStatus');
+
+function randType() { return Math.floor(Math.random() * 7) + 1; }
+
+function showAIDifficulty() {
+  menuScreen.innerHTML = `
+    <h1>TETRIS</h1>
+    <div class="sub">🤖 人機對戰 — 選擇難度</div>
+    <button class="menu-btn easy" onclick="startAIWithDifficulty('easy')">🟢 簡單</button>
+    <button class="menu-btn medium" onclick="startAIWithDifficulty('medium')">🟡 中級</button>
+    <button class="menu-btn hard" onclick="startAIWithDifficulty('hard')">🔴 困難</button>
+    <button class="menu-btn back" onclick="showMainMenu()">← 返回</button>
+  `;
+}
+
+function showMainMenu() {
+  menuScreen.innerHTML = `
+    <h1>TETRIS</h1>
+    <div class="sub">俄 羅 斯 方 塊</div>
+    <button class="menu-btn single" onclick="startMode('single')">🧑 單人模式</button>
+    <button class="menu-btn ai" onclick="showAIDifficulty()">🤖 人機對戰</button>
+    <button class="menu-btn friend" onclick="showRoomScreen()">👥 好友對戰</button>
+  `;
+}
+
+function startAIWithDifficulty(diff) {
+  aiDifficulty = diff;
+  startMode('ai');
+}
+
+function restoreMainMenu() {
+  showMainMenu();
+}
+
+function toggleGhost() {
+  showGhost = !showGhost;
+  const gt = $('ghostToggle');
+  if (gt) {
+    gt.textContent = showGhost ? '👻 輔助線 ON' : '👻 輔助線 OFF';
+    gt.className = 'info-tag ' + (showGhost ? 'on' : 'off');
+  }
+}
+
+function collides(s, sh, ox, oy) {
+  for (let r = 0; r < sh.length; r++)
+    for (let c = 0; c < sh[r].length; c++)
+      if (sh[r][c]) {
+        const x = ox + c, y = oy + r;
+        if (x < 0 || x >= COLS || y >= ROWS) return true;
+        if (y >= 0 && s.board[y][x] !== 0) return true;
+      }
+  return false;
+}
+
+function collidesBoard(b, sh, ox, oy) {
+  for (let r = 0; r < sh.length; r++)
+    for (let c = 0; c < sh[r].length; c++)
+      if (sh[r][c]) {
+        const x = ox + c, y = oy + r;
+        if (x < 0 || x >= COLS || y >= ROWS) return true;
+        if (y >= 0 && b[y][x] !== 0) return true;
+      }
+  return false;
+}
+
+function spawn(s) {
+  if (!s.nextType) s.nextType = randType();
+  s.piece.type = s.nextType;
+  s.piece.shape = SHAPES[s.nextType].map(r => [...r]);
+  s.piece.x = Math.floor((COLS - s.piece.shape[0].length) / 2);
+  s.piece.y = 0;
+  s.nextType = randType();
+  if (collides(s, s.piece.shape, s.piece.x, s.piece.y)) {
+    s.gameOver = true;
+    clearInterval(s.interval);
+    if (s === P) onPGO();
+    if (s === AI) onAIGO();
+  }
+}
+
+function lock(s) {
+  for (let r = 0; r < s.piece.shape.length; r++)
+    for (let c = 0; c < s.piece.shape[r].length; c++)
+      if (s.piece.shape[r][c]) {
+        const y = s.piece.y + r, x = s.piece.x + c;
+        if (y >= 0) s.board[y][x] = s.piece.type;
+      }
+  clearLines(s);
+  spawn(s);
+}
+
+function clearLines(s) {
+  let n = 0;
+  for (let r = ROWS - 1; r >= 0; ) {
+    if (s.board[r].every(c => c !== 0)) {
+      s.board.splice(r, 1); s.board.unshift(Array(COLS).fill(0)); n++;
+    } else r--;
+  }
+  if (n > 0) {
+    s.score += ([0,100,300,500,800][n] || 800) * s.level;
+    s.lines += n;
+    s.level = Math.floor(s.lines / 10) + 1;
+    adjSpeed(s);
+    if (s === P) sendFriend();
+  }
+}
+
+function adjSpeed(s) {
+  clearInterval(s.interval);
+  const base = (s === AI && mode === 'ai')
+    ? ({ 'easy': 900, 'medium': 700, 'hard': 400 })[aiDifficulty] || 700
+    : 800;
+  s.interval = setInterval(() => {
+    if (s.gameOver || s.paused) return;
+    down(s);
+  }, Math.max(80, base - (s.level - 1) * 60));
+}
+
+function down(s) {
+  if (s.gameOver || s.paused) return;
+  if (!collides(s, s.piece.shape, s.piece.x, s.piece.y + 1)) s.piece.y++;
+  else lock(s);
+}
+
+function left(s) {
+  if (s.gameOver || s.paused) return;
+  if (!collides(s, s.piece.shape, s.piece.x - 1, s.piece.y)) s.piece.x--;
+}
+
+function right(s) {
+  if (s.gameOver || s.paused) return;
+  if (!collides(s, s.piece.shape, s.piece.x + 1, s.piece.y)) s.piece.x++;
+}
+
+function rotate(s) {
+  if (s.gameOver || s.paused) return;
+  const sh = s.piece.shape;
+  const r = sh[0].map((_, i) => sh.map(row => row[i]).reverse());
+  if (!collides(s, r, s.piece.x, s.piece.y)) s.piece.shape = r;
+  else if (!collides(s, r, s.piece.x - 1, s.piece.y)) { s.piece.shape = r; s.piece.x--; }
+  else if (!collides(s, r, s.piece.x + 1, s.piece.y)) { s.piece.shape = r; s.piece.x++; }
+}
+
+function drop(s) {
+  if (s.gameOver || s.paused) return;
+  while (!collides(s, s.piece.shape, s.piece.x, s.piece.y + 1)) s.piece.y++;
+  lock(s);
+}
+
+function togglePause() {
+  if (P.gameOver) return;
+  P.paused = !P.paused;
+  const po = $('pauseOverlay');
+  if (po) po.classList.toggle('show', P.paused);
+  const pb = $('pauseBtn');
+  if (pb) pb.textContent = P.paused ? '▶ 繼續' : '⏸ 暫停';
+}
+
+function getGhostY(s) {
+  if (!s.piece.shape) return s.piece.y;
+  let y = s.piece.y;
+  while (!collides(s, s.piece.shape, s.piece.x, y + 1)) y++;
+  return y;
+}
+
+function aiEval(b, diff) {
+  const h = [];
+  for (let c = 0; c < COLS; c++) {
+    let v = 0;
+    for (let r = 0; r < ROWS; r++) { if (b[r][c] !== 0) { v = ROWS - r; break; } }
+    h.push(v);
+  }
+  let holes = 0;
+  for (let c = 0; c < COLS; c++) {
+    let block = false;
+    for (let r = 0; r < ROWS; r++) { if (b[r][c] !== 0) block = true; else if (block) holes++; }
+  }
+  let bump = 0;
+  for (let c = 0; c < COLS - 1; c++) bump += Math.abs(h[c] - h[c+1]);
+  let comp = 0;
+  for (let r = 0; r < ROWS; r++) if (b[r].every(c => c !== 0)) comp++;
+  const agg = h.reduce((a,b)=>a+b, 0);
+
+  const noiseScale = { 'easy': 10, 'medium': 3, 'hard': 0.4 }[diff] || 3;
+  const noise = (Math.random() - 0.5) * 2 * noiseScale;
+
+  // Easy: randomly skip evaluations (play suboptimally)
+  if (diff === 'easy' && Math.random() < 0.15) return -Infinity;
+
+  const wAgg = -0.51, wComp = 0.76, wHoles = -0.36, wBump = -0.18;
+  return wAgg * agg + wComp * comp + wHoles * holes + wBump * bump + noise;
+}
+
+function aiBest(b, type, diff) {
+  let best = -Infinity, move = { x: 0, y: 0, shape: null };
+  let sh = SHAPES[type].map(r => [...r]);
+  for (let rot = 0; rot < 4; rot++) {
+    for (let x = 0; x <= COLS - sh[0].length; x++) {
+      let y = 0;
+      while (!collidesBoard(b, sh, x, y + 1)) y++;
+      const tb = b.map(r => [...r]);
+      for (let r = 0; r < sh.length; r++)
+        for (let c = 0; c < sh[r].length; c++)
+          if (sh[r][c] && y+r>=0 && y+r<ROWS && x+c>=0 && x+c<COLS) tb[y+r][x+c] = type;
+      const sc = aiEval(tb, diff);
+      if (sc > best) { best = sc; move = { x, y, shape: sh.map(r => [...r]) }; }
+    }
+    sh = sh[0].map((_, i) => sh.map(row => row[i]).reverse());
+  }
+  return move;
+}
+
+function aiPlay() {
+  if (AI.gameOver || AI.paused) return;
+  const m = aiBest(AI.board, AI.piece.type, aiDifficulty);
+  AI.piece.x = m.x;
+  AI.piece.shape = m.shape.map(r => [...r]);
+  let y = 0;
+  while (!collides(AI, AI.piece.shape, AI.piece.x, y + 1)) y++;
+  AI.piece.y = y;
+  lock(AI);
+}
+
+function drawGrid(ctx, bs) {
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let r = 0; r <= ROWS; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r * bs); ctx.lineTo(COLS * bs, r * bs); ctx.stroke();
+  }
+  for (let c = 0; c <= COLS; c++) {
+    ctx.beginPath(); ctx.moveTo(c * bs, 0); ctx.lineTo(c * bs, ROWS * bs); ctx.stroke();
+  }
+}
+
+function drawBoard(cv, b, pc, bs, stateForGhost) {
+  const w = COLS * bs, h = ROWS * bs;
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+
+  drawGrid(ctx, bs);
+
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (b[r][c]) drawBlock(ctx, c, r, b[r][c], bs);
+
+  // Ghost piece
+  if (showGhost && stateForGhost && stateForGhost.piece && stateForGhost.piece.shape && !stateForGhost.gameOver) {
+    const gy = getGhostY(stateForGhost);
+    if (gy !== stateForGhost.piece.y) {
+      const pc2 = stateForGhost.piece;
+      for (let r = 0; r < pc2.shape.length; r++)
+        for (let c = 0; c < pc2.shape[r].length; c++)
+          if (pc2.shape[r][c]) {
+            const gx = (pc2.x + c) * bs, gp = (gy + r) * bs;
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gx + 1.5, gp + 1.5, bs - 3, bs - 3);
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.fillRect(gx + 1, gp + 1, bs - 2, bs - 2);
+          }
+    }
+  }
+
+  if (pc && pc.shape)
+    for (let r = 0; r < pc.shape.length; r++)
+      for (let c = 0; c < pc.shape[r].length; c++)
+        if (pc.shape[r][c]) drawBlock(ctx, pc.x + c, pc.y + r, pc.type, bs);
+}
+
+function drawBlock(ctx, x, y, t, bs) {
+  const c = COLORS[t];
+  ctx.fillStyle = c;
+  ctx.fillRect(x * bs, y * bs, bs - 1, bs - 1);
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillRect(x * bs + 2, y * bs + 2, bs - 5, 2);
+  ctx.fillRect(x * bs + 2, y * bs + 2, 2, bs - 5);
+}
+
+function drawNext(cv, type, bs) {
+  const ctx = cv.getContext('2d');
+  cv.width = 100; cv.height = 80;
+  ctx.clearRect(0, 0, 100, 80);
+  const sh = SHAPES[type];
+  if (!sh) return;
+  const cols = sh[0].length, rows = sh.length;
+  const ox = (100 - cols * bs) / 2, oy = (80 - rows * bs) / 2;
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      if (sh[r][c]) drawBlock(ctx, ox/bs + c, oy/bs + r, type, bs);
+}
+
+function updateUI() {
+  if (mode === 'single') {
+    const s = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+    s('s-score', P.score); s('s-level', P.level); s('s-lines', P.lines);
+    s('s-high', loadHS());
+    drawNext($('s-next'), P.nextType, 20);
+  } else {
+    const p1 = document.querySelectorAll('.p1-stat .val');
+    if (p1.length >= 3) { p1[0].textContent = P.score; p1[1].textContent = P.level; p1[2].textContent = P.lines; }
+    if (mode === 'ai') {
+      const p2 = document.querySelectorAll('.p2-stat .val');
+      if (p2.length >= 3) { p2[0].textContent = AI.score; p2[1].textContent = AI.level; p2[2].textContent = AI.lines; }
+      drawNext($('ai-next'), AI.nextType, 18);
+    } else if (mode === 'friend' && friendData) {
+      const p2 = document.querySelectorAll('.p2-stat .val');
+      if (p2.length >= 3) { p2[0].textContent = friendData.score; p2[1].textContent = friendData.level; p2[2].textContent = friendData.lines; }
+    }
+  }
+}
+
+function loop() {
+  if (mode === 'single') {
+    drawBoard($('s-board'), P.board, P.piece, BS_SINGLE, P);
+  } else {
+    const bs = BS_VS;
+    drawBoard($('p1-board'), P.board, P.piece, bs, P);
+    if (mode === 'ai') drawBoard($('p2-board'), AI.board, AI.piece, bs, AI);
+    else if (mode === 'friend') {
+      const fb = friendData ? friendData.board : Array.from({length: ROWS}, () => Array(COLS).fill(0));
+      drawBoard($('p2-board'), fb, null, bs, null);
+    }
+  }
+  updateUI();
+  animId = requestAnimationFrame(loop);
+}
+
+function startMode(m) {
+  mode = m;
+
+  const isAI = m === 'ai';
+  if (isAI) {
+    const diffNames = { 'easy': '簡單', 'medium': '中級', 'hard': '困難' };
+    const diffDots = { 'easy': '🟢', 'medium': '🟡', 'hard': '🔴' };
+    $('modeTag').textContent = `人機對戰 (${diffDots[aiDifficulty]} ${diffNames[aiDifficulty]})`;
+  } else {
+    $('modeTag').textContent = m === 'single' ? '單人模式' : '好友對戰';
+  }
+
+  P = createState(); AI = createState(); friendData = null;
+  menuScreen.classList.add('hidden');
+  roomScreen.classList.add('hidden');
+  gameWrapper.classList.remove('hidden');
+
+  if (m === 'single') buildSingle();
+  else if (isAI) { buildVS('AI'); startAI(); }
+  else buildVS('好友');
+
+  const gt = $('ghostToggle');
+  if (gt) {
+    gt.textContent = showGhost ? '👻 輔助線 ON' : '👻 輔助線 OFF';
+    gt.className = 'info-tag ' + (showGhost ? 'on' : 'off');
+  }
+
+  ['gameOverOverlay','winOverlay','pauseOverlay'].forEach(id => {
+    const el = $(id);
+    if (el) el.classList.remove('show');
+  });
+  const pb = $('pauseBtn');
+  if (pb) pb.textContent = '⏸ 暫停';
+
+  spawn(P); adjSpeed(P);
+  if (animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+function buildSingle() {
+  boardsArea.innerHTML = `
+    <div style="display:flex;gap:15px;align-items:flex-start">
+      <div class="board-col">
+        <div class="board-wrapper" id="singleWrapper">
+          <canvas id="s-board" class="game-board"></canvas>
+        </div>
+      </div>
+      <div id="sidebarCol">
+        <div class="side-box"><h3>最高分</h3><div class="val gold" id="s-high">0</div></div>
+        <div class="side-box"><h3>分數</h3><div class="val" id="s-score">0</div></div>
+        <div class="side-box"><h3>等級</h3><div class="val" id="s-level">1</div></div>
+        <div class="side-box"><h3>消行數</h3><div class="val" id="s-lines">0</div></div>
+        <div class="side-box"><h3>下一塊</h3><canvas id="s-next" width="100" height="80"></canvas></div>
+      </div>
+    </div>
+  `;
+  makeOverlays($('singleWrapper'));
+}
+
+function buildVS(p2lbl) {
+  const ad = mode === 'ai' ? aiDifficulty : null;
+  const diffDot = ad ? { 'easy': '🟢', 'medium': '🟡', 'hard': '🔴' }[ad] : '';
+  const diffLabel = ad ? { 'easy': '簡單', 'medium': '中級', 'hard': '困難' }[ad] : '';
+  boardsArea.innerHTML = `
+    <div class="board-col">
+      <div class="player-label">🧑 玩家</div>
+      <div class="board-wrapper" id="p1Wrapper">
+        <canvas id="p1-board" class="game-board"></canvas>
+      </div>
+    </div>
+    <div id="centerStats">
+      <div class="stat-item p1-stat"><div class="label">玩家</div><div class="val p1">0</div></div>
+      <div class="stat-item p1-stat"><div class="label">等級</div><div class="val p1">1</div></div>
+      <div class="stat-item p1-stat"><div class="label">行數</div><div class="val p1">0</div></div>
+      <div class="vs-divider">VS</div>
+      <div class="stat-item p2-stat"><div class="label">${p2lbl} ${diffDot ? diffDot : ''}</div><div class="val p2">0</div></div>
+      <div class="stat-item p2-stat"><div class="label">等級</div><div class="val p2">1</div></div>
+      <div class="stat-item p2-stat"><div class="label">行數</div><div class="val p2">0</div></div>
+      ${mode === 'ai' ? `<div class="side-box" style="background:#0f3460;border-radius:8px;padding:8px;margin-top:4px"><h3 style="font-size:11px;color:#888;letter-spacing:1px;margin-bottom:4px">AI 預覽 ${diffLabel ? '('+diffLabel+')' : ''}</h3><canvas id="ai-next" width="100" height="60" style="background:#0f3460;border-radius:6px;display:block;margin:0 auto"></canvas></div>` : ''}
+    </div>
+    <div class="board-col">
+      <div class="player-label">${mode === 'ai' ? '🤖 AI' : '👥 好友'}</div>
+      <canvas id="p2-board" class="game-board"></canvas>
+    </div>
+  `;
+  makeOverlays($('p1Wrapper'));
+}
+
+function makeOverlays(wrapper) {
+  const ov = (id, h, sub, btn) => {
+    const d = document.createElement('div');
+    d.className = 'overlay'; d.id = id;
+    d.innerHTML = `<h2>${h}</h2>${sub ? `<div class="sub-text" id="${sub.id || ''}">${sub.text || ''}</div>` : ''}${btn ? `<button class="ov-btn ${btn.cls || 'red'}" onclick="${btn.cb || 'restartGame()'}">${btn.text || '確定'}</button>` : ''}`;
+    wrapper.appendChild(d);
+  };
+  ov('gameOverOverlay', 'GAME OVER', { id: 'goSub', text: '' }, { text: '重新開始', cb: 'restartGame()' });
+  ov('pauseOverlay', '暫 停', { text: '按 P 繼續' }, null);
+  ov('winOverlay', '🎉 你贏了！', { id: 'winSub', text: '' }, { text: '再玩一次', cb: 'restartGame()', cls: 'purple' });
+}
+
+function restartGame() { startMode(mode); }
+
+function backToMenu() {
+  if (ws) { ws.close(); ws = null; wsConnected = false; }
+  clearInterval(P.interval); clearInterval(AI.interval);
+  if (animId) cancelAnimationFrame(animId);
+  mode = 'menu';
+  gameWrapper.classList.add('hidden');
+  menuScreen.classList.remove('hidden');
+  showMainMenu();
+  connStatus.textContent = '● 離線';
+  connStatus.className = 'disconnected';
+}
+
+function startAI() {
+  spawn(AI); adjSpeed(AI);
+  clearInterval(AI.interval);
+  const baseSpeed = { 'easy': 900, 'medium': 700, 'hard': 400 }[aiDifficulty] || 700;
+  AI.interval = setInterval(() => {
+    if (AI.gameOver || AI.paused) return;
+    aiPlay();
+  }, Math.max(80, baseSpeed - (AI.level - 1) * 60));
+}
+
+function connectWS(cb) {
+  if (ws) ws.close();
+  const host = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? location.hostname : 'localhost';
+  try { ws = new WebSocket(`ws://${host}:3000`); }
+  catch(e) { $('roomStatus').textContent = '❌ 無法連接伺服器'; return; }
+  ws.onopen = () => { wsConnected = true; connStatus.textContent = '● 已連線'; connStatus.className = 'connected'; if (cb) cb(); };
+  ws.onclose = () => { wsConnected = false; connStatus.textContent = '● 離線'; connStatus.className = 'disconnected'; if (mode === 'friend' && !P.gameOver) showMsg('對手已斷線'); };
+  ws.onerror = () => { $('roomStatus').textContent = '❌ 無法連接到伺服器 (請先啟動 server.py)'; };
+  ws.onmessage = e => handleWS(JSON.parse(e.data));
+}
+
+function handleWS(d) {
+  if (d.type === 'created') { $('roomStatus').textContent = `✅ 房間已建立：${d.code}`; $('roomCodeInput').value = d.code; }
+  else if (d.type === 'error') { $('roomStatus').textContent = `❌ ${d.message}`; if (d.message.includes('不存在')) $('roomCodeInput').value = ''; }
+  else if (d.type === 'start') { hideRoomScreen(); startMode('friend'); }
+  else if (d.type === 'opponent_state') { friendData = { board: d.board, score: d.score||0, level: d.level||1, lines: d.lines||0 }; }
+  else if (d.type === 'opponent_gameover') {
+    friendData = friendData || { board: Array.from({length: ROWS}, () => Array(COLS).fill(0)), score: d.score||0, level: d.level||1, lines: d.lines||0 };
+    const wo = $('winOverlay');
+    if (wo) { wo.classList.add('show'); const ws2 = $('winSub'); if (ws2) ws2.textContent = `對手最終 ${d.score} 分`; }
+  }
+  else if (d.type === 'opponent_disconnected') { if (mode === 'friend') showMsg('對手已離開'); }
+}
+
+function showMsg(msg) {
+  const go = $('gameOverOverlay');
+  if (go) { go.querySelector('h2').textContent = msg; go.classList.add('show'); }
+}
+
+function sendFriend() {
+  if (mode !== 'friend' || !ws || !wsConnected || P.gameOver) return;
+  ws.send(JSON.stringify({ type: 'state', board: P.board, score: P.score, level: P.level, lines: P.lines }));
+}
+
+function createRoom() {
+  $('roomStatus').textContent = '⏳ 建立中...';
+  connectWS(() => ws.send(JSON.stringify({ type: 'create' })));
+}
+
+function joinRoom() {
+  const code = $('roomCodeInput').value.trim();
+  if (code.length !== 6 || !/^\d{6}$/.test(code)) { $('roomStatus').textContent = '❌ 請輸入正確的 6 位數房間號碼'; return; }
+  $('roomStatus').textContent = '⏳ 加入中...';
+  connectWS(() => ws.send(JSON.stringify({ type: 'join', code })));
+}
+
+function onPGO() {
+  const hs = loadHS();
+  if (P.score > hs) localStorage.setItem('tetris_highscore', P.score);
+  clearInterval(P.interval);
+  if (mode === 'friend' && ws && wsConnected) ws.send(JSON.stringify({ type: 'gameover', score: P.score, level: P.level, lines: P.lines }));
+  const go = $('gameOverOverlay'), gs = $('goSub');
+  if (!go) return;
+  if (mode === 'single') { go.classList.add('show'); if (gs) gs.textContent = `得分：${P.score} ｜ 等級：${P.level}`; }
+  else if (mode === 'ai') {
+    go.querySelector('h2').textContent = AI.gameOver ? '平手！' : '你輸了！';
+    go.classList.add('show');
+    if (gs) gs.textContent = `玩家 ${P.score} 分 vs AI ${AI.score} 分`;
+  } else { go.querySelector('h2').textContent = '你輸了！'; go.classList.add('show'); if (gs) gs.textContent = `得分：${P.score}`; }
+}
+
+function onAIGO() {
+  if (mode === 'ai' && !P.gameOver) {
+    const wo = $('winOverlay');
+    const ws2 = $('winSub');
+    if (wo) { wo.classList.add('show'); if (ws2) ws2.textContent = `玩家 ${P.score} 分 vs AI ${AI.score} 分`; }
+  }
+}
+
+function showRoomScreen() {
+  menuScreen.classList.add('hidden');
+  roomScreen.classList.remove('hidden');
+  $('roomCodeInput').value = '';
+  $('roomStatus').textContent = '請輸入 6 位數房間號碼';
+}
+
+function hideRoomScreen() {
+  roomScreen.classList.add('hidden');
+  menuScreen.classList.remove('hidden');
+}
+
+function loadHS() { const s = localStorage.getItem('tetris_highscore'); return s ? parseInt(s, 10) : 0; }
+
+document.addEventListener('keydown', e => {
+  if (mode === 'menu') return;
+  if (P.gameOver && e.key === 'Enter') { restartGame(); return; }
+  if (e.key === 'p' || e.key === 'P') { e.preventDefault(); togglePause(); return; }
+  if (e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleGhost(); return; }
+  if (P.gameOver || P.paused) return;
+  switch (e.key) {
+    case 'ArrowLeft': e.preventDefault(); left(P); break;
+    case 'ArrowRight': e.preventDefault(); right(P); break;
+    case 'ArrowDown': e.preventDefault(); down(P); break;
+    case 'ArrowUp': e.preventDefault(); rotate(P); break;
+    case ' ': e.preventDefault(); drop(P); break;
+  }
+});
+
+document.querySelectorAll('.ctrl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (mode === 'menu' || P.gameOver || P.paused) return;
+    const a = btn.dataset.action;
+    if (a === 'left') left(P);
+    if (a === 'right') right(P);
+    if (a === 'rotate') rotate(P);
+    if (a === 'drop') drop(P);
+  });
+});
+
+$('pauseBtn').addEventListener('click', togglePause);
+$('ghostToggle').addEventListener('click', toggleGhost);
+
+connStatus.textContent = '● 離線';
+connStatus.className = 'disconnected';
+</script>
+</body>
+</html>
