@@ -179,6 +179,34 @@ canvas.game-board {
 .diff-dot.easy { background: #4f4; }
 .diff-dot.medium { background: #ff0; }
 .diff-dot.hard { background: #f44; }
+
+#logModal {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.85);
+  display: none; justify-content: center; align-items: center;
+  padding: 20px;
+}
+#logModal.show { display: flex; }
+#logBox {
+  background: #16213e; border-radius: 16px; padding: 30px 35px;
+  max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 0 60px rgba(0,0,0,0.6); position: relative;
+}
+#logBox h2 { font-size: 22px; color: #e94560; margin-bottom: 20px; letter-spacing: 3px; }
+#logBox .log-section { margin-bottom: 18px; }
+#logBox .log-section h3 { font-size: 15px; color: #00f0f0; margin-bottom: 6px; letter-spacing: 1px; }
+#logBox .log-section ul { list-style: none; padding: 0; }
+#logBox .log-section li { font-size: 13px; color: #ccc; line-height: 1.8; padding-left: 14px; position: relative; }
+#logBox .log-section li::before { content: '▸'; position: absolute; left: 0; color: #e94560; }
+#logBox .log-meta { font-size: 12px; color: #666; line-height: 2; margin-top: 10px; padding-top: 12px; border-top: 1px solid #0f3460; }
+#logBox .close-log-btn {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: #888; font-size: 22px; cursor: pointer;
+}
+#logBox .close-log-btn:hover { color: #e94560; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f3460; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #533483; border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -189,6 +217,7 @@ canvas.game-board {
   <button class="menu-btn single" onclick="startMode('single')">🧑 單人模式</button>
   <button class="menu-btn ai" onclick="showAIDifficulty()">🤖 人機對戰</button>
   <button class="menu-btn friend" onclick="showRoomScreen()">👥 好友對戰</button>
+  <button class="menu-btn back" style="margin-top:18px;background:#0f3460" onclick="toggleLog()">📜 開發紀錄</button>
 </div>
 
 <div id="roomScreen" class="hidden">
@@ -232,6 +261,60 @@ canvas.game-board {
   </div>
 </div>
 
+<div id="logModal">
+  <div id="logBox">
+    <button class="close-log-btn" onclick="toggleLog()">✕</button>
+    <h2>📜 開發紀錄</h2>
+    <div class="log-section">
+      <h3>1. 初次建置：基本俄羅斯方塊遊戲</h3>
+      <ul>
+        <li>建立 <code>index.html</code>，單一 HTML 包含完整遊戲</li>
+        <li>標準 10×20 棋盤、7 種經典方塊（I, O, T, S, Z, J, L）</li>
+        <li>鍵盤控制：方向鍵移動/旋轉、空格直接落下</li>
+        <li>分數、等級、消行數顯示、下一塊預覽</li>
+        <li>等級越高掉落越快（800 - (等級-1)×70，最快 100ms）</li>
+        <li>觸控按鈕支援手機操作</li>
+      </ul>
+    </div>
+    <div class="log-section">
+      <h3>2. 加入暫停／重新開始／最高分</h3>
+      <ul>
+        <li>新增暫停/繼續按鈕，按 P 鍵切換</li>
+        <li>新增獨立的重新開始按鈕</li>
+        <li>使用 localStorage 儲存最高分，金色顯示</li>
+        <li>遊戲說明面板（操作提示）</li>
+      </ul>
+    </div>
+    <div class="log-section">
+      <h3>3. 三大遊戲模式（重構）</h3>
+      <ul>
+        <li>單人模式、人機對戰（AI 啟發式演算法）、好友對戰</li>
+        <li>新增 server.py（Python WebSocket 伺服器）</li>
+        <li>選單系統、房間系統（6 位數房號配對）</li>
+      </ul>
+    </div>
+    <div class="log-section">
+      <h3>4. AI 難度分級＋輔助線＋方格背景</h3>
+      <ul>
+        <li>三級難度：簡單（高隨機 900ms）、中級（700ms）、困難（近乎完美 400ms）</li>
+        <li>掉落輔助線、方格背景</li>
+      </ul>
+    </div>
+    <div class="log-section">
+      <h3>5. Bug 修復</h3>
+      <ul>
+        <li>單人模式遊玩後無法切換到人機對戰選單</li>
+      </ul>
+    </div>
+    <div class="log-meta">
+      📁 C:\yy\_wp\homework\期中作業\<br>
+      ├── index.html &nbsp; 主遊戲頁面<br>
+      ├── server.py &nbsp; WebSocket 伺服器（好友模式）<br>
+      └── dialogue-log.md &nbsp; 對話紀錄
+    </div>
+  </div>
+</div>
+
 <div id="connStatus">● 離線</div>
 
 <script>
@@ -259,7 +342,8 @@ function createState() {
     board: Array.from({length: ROWS}, () => Array(COLS).fill(0)),
     score: 0, level: 1, lines: 0, gameOver: false,
     piece: { shape: null, x: 0, y: 0, type: 0 },
-    nextType: 0, interval: null, paused: false
+    nextType: 0, interval: null, paused: false,
+    bag: [], lastDealt: undefined
   };
 }
 
@@ -279,7 +363,25 @@ const gameWrapper = $('gameWrapper');
 const boardsArea = $('boardsArea');
 const connStatus = $('connStatus');
 
-function randType() { return Math.floor(Math.random() * 7) + 1; }
+function bagNext(s) {
+  if (s.bag.length === 0) {
+    s.bag = [1, 2, 3, 4, 5, 6, 7];
+    for (let i = 6; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [s.bag[i], s.bag[j]] = [s.bag[j], s.bag[i]];
+    }
+    if (s.lastDealt !== undefined && s.bag[0] === s.lastDealt) {
+      for (let k = 1; k < 7; k++) {
+        if (s.bag[k] !== s.lastDealt) {
+          [s.bag[0], s.bag[k]] = [s.bag[k], s.bag[0]];
+          break;
+        }
+      }
+    }
+  }
+  s.lastDealt = s.bag.pop();
+  return s.lastDealt;
+}
 
 function showAIDifficulty() {
   menuScreen.innerHTML = `
@@ -289,6 +391,7 @@ function showAIDifficulty() {
     <button class="menu-btn medium" onclick="startAIWithDifficulty('medium')">🟡 中級</button>
     <button class="menu-btn hard" onclick="startAIWithDifficulty('hard')">🔴 困難</button>
     <button class="menu-btn back" onclick="showMainMenu()">← 返回</button>
+    <button class="menu-btn back" style="background:#0f3460" onclick="toggleLog()">📜 開發紀錄</button>
   `;
 }
 
@@ -299,8 +402,11 @@ function showMainMenu() {
     <button class="menu-btn single" onclick="startMode('single')">🧑 單人模式</button>
     <button class="menu-btn ai" onclick="showAIDifficulty()">🤖 人機對戰</button>
     <button class="menu-btn friend" onclick="showRoomScreen()">👥 好友對戰</button>
+    <button class="menu-btn back" style="margin-top:18px;background:#0f3460" onclick="toggleLog()">📜 開發紀錄</button>
   `;
 }
+
+function toggleLog() { $('logModal').classList.toggle('show'); }
 
 function startAIWithDifficulty(diff) {
   aiDifficulty = diff;
@@ -343,12 +449,12 @@ function collidesBoard(b, sh, ox, oy) {
 }
 
 function spawn(s) {
-  if (!s.nextType) s.nextType = randType();
+  if (!s.nextType) s.nextType = bagNext(s);
   s.piece.type = s.nextType;
   s.piece.shape = SHAPES[s.nextType].map(r => [...r]);
   s.piece.x = Math.floor((COLS - s.piece.shape[0].length) / 2);
   s.piece.y = 0;
-  s.nextType = randType();
+  s.nextType = bagNext(s);
   if (collides(s, s.piece.shape, s.piece.x, s.piece.y)) {
     s.gameOver = true;
     clearInterval(s.interval);
@@ -378,10 +484,18 @@ function clearLines(s) {
   if (n > 0) {
     s.score += ([0,100,300,500,800][n] || 800) * s.level;
     s.lines += n;
-    s.level = Math.floor(s.lines / 10) + 1;
+    s.level = Math.floor(s.lines / 8) + 1;
     adjSpeed(s);
     if (s === P) sendFriend();
   }
+}
+
+function calcInterval(base, level) {
+  const lv8 = Math.max(base - 420, 80);
+  if (level <= 8) return Math.max(lv8, base - (level - 1) * 60);
+  if (base === 800) return 350 - Math.floor((Math.min(level, 20) - 9) / 2) * 30;
+  const factor = 1 + 0.5 * Math.ceil((Math.min(level, 20) - 8) / 2);
+  return lv8 / factor;
 }
 
 function adjSpeed(s) {
@@ -392,7 +506,7 @@ function adjSpeed(s) {
   s.interval = setInterval(() => {
     if (s.gameOver || s.paused) return;
     down(s);
-  }, Math.max(80, base - (s.level - 1) * 60));
+  }, calcInterval(base, s.level));
 }
 
 function down(s) {
@@ -726,7 +840,7 @@ function startAI() {
   AI.interval = setInterval(() => {
     if (AI.gameOver || AI.paused) return;
     aiPlay();
-  }, Math.max(80, baseSpeed - (AI.level - 1) * 60));
+  }, calcInterval(baseSpeed, AI.level));
 }
 
 function connectWS(cb) {
