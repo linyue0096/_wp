@@ -343,7 +343,8 @@ function createState() {
     score: 0, level: 1, lines: 0, gameOver: false,
     piece: { shape: null, x: 0, y: 0, type: 0 },
     nextType: 0, interval: null, paused: false,
-    bag: [], lastDealt: undefined
+    bag: [], lastDealt: undefined,
+    clearGlow: 0
   };
 }
 
@@ -352,6 +353,7 @@ let P = createState();
 let AI = createState();
 let friendData = null;
 let ws = null, wsConnected = false;
+let wsAvailable = false;
 let animId = null;
 let aiDifficulty = 'medium';
 let showGhost = true;
@@ -407,6 +409,33 @@ function showMainMenu() {
 }
 
 function toggleLog() { $('logModal').classList.toggle('show'); }
+
+function updateMenuButtons() {
+  if (document.querySelector('#menuScreen h1')) showMainMenu();
+}
+
+function autoCheckWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const testWS = new WebSocket(`${proto}//${location.host}`);
+  const timeout = setTimeout(() => {
+    wsAvailable = false;
+    testWS.close();
+    updateMenuButtons();
+  }, 2000);
+  testWS.onopen = () => {
+    clearTimeout(timeout);
+    wsAvailable = true;
+    testWS.close();
+    updateMenuButtons();
+    connStatus.textContent = '● 已連線';
+    connStatus.className = 'connected';
+  };
+  testWS.onerror = () => {
+    clearTimeout(timeout);
+    wsAvailable = false;
+    updateMenuButtons();
+  };
+}
 
 function startAIWithDifficulty(diff) {
   aiDifficulty = diff;
@@ -482,7 +511,8 @@ function clearLines(s) {
     } else r--;
   }
   if (n > 0) {
-    s.score += ([0,100,300,500,800][n] || 800) * s.level;
+    s.clearGlow = n * 2;
+    s.score += ([0, 100, 300, 500, 800][n] || 800) * s.level;
     s.lines += n;
     s.level = Math.floor(s.lines / 8) + 1;
     adjSpeed(s);
@@ -636,6 +666,17 @@ function drawBoard(cv, b, pc, bs, stateForGhost) {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
       if (b[r][c]) drawBlock(ctx, c, r, b[r][c], bs);
+
+  // Clear line glow effect
+  const cs = stateForGhost;
+  if (cs && cs.clearGlow > 0) {
+    ctx.strokeStyle = `rgba(233,69,96,${cs.clearGlow * 0.06})`;
+    ctx.lineWidth = 2;
+    for (let r = 0; r < cs.clearGlow / 2; r++) {
+      ctx.strokeRect(3, r * bs + 3, COLS * bs - 6, bs - 6);
+    }
+    cs.clearGlow--;
+  }
 
   // Ghost piece
   if (showGhost && stateForGhost && stateForGhost.piece && stateForGhost.piece.shape && !stateForGhost.gameOver) {
@@ -829,8 +870,6 @@ function backToMenu() {
   gameWrapper.classList.add('hidden');
   menuScreen.classList.remove('hidden');
   showMainMenu();
-  connStatus.textContent = '● 離線';
-  connStatus.className = 'disconnected';
 }
 
 function startAI() {
@@ -845,8 +884,8 @@ function startAI() {
 
 function connectWS(cb) {
   if (ws) ws.close();
-  const host = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? location.hostname : 'localhost';
-  try { ws = new WebSocket(`ws://${host}:3000`); }
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  try { ws = new WebSocket(`${proto}//${location.host}`); }
   catch(e) { $('roomStatus').textContent = '❌ 無法連接伺服器'; return; }
   ws.onopen = () => { wsConnected = true; connStatus.textContent = '● 已連線'; connStatus.className = 'connected'; if (cb) cb(); };
   ws.onclose = () => { wsConnected = false; connStatus.textContent = '● 離線'; connStatus.className = 'disconnected'; if (mode === 'friend' && !P.gameOver) showMsg('對手已斷線'); };
@@ -957,6 +996,7 @@ $('ghostToggle').addEventListener('click', toggleGhost);
 
 connStatus.textContent = '● 離線';
 connStatus.className = 'disconnected';
+autoCheckWS();
 </script>
 </body>
 </html>
