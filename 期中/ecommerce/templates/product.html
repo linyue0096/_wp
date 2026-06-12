@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - E-Shop{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-6">
+        <a href="/" class="hover:text-indigo-600">首頁</a> &gt;
+        <a href="/category/{{ product.category_name|lower }}" class="hover:text-indigo-600">{{ product.category_name }}</a> &gt;
+        <span class="text-gray-800">{{ product.name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full rounded-xl shadow-lg">
+        </div>
+        <div>
+            <span class="text-sm text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">{{ product.category_name }}</span>
+            <h1 class="text-3xl font-bold text-gray-800 mt-3 mb-2">{{ product.name }}</h1>
+            <p class="text-gray-500 mb-4">賣家: <span class="text-gray-700 font-medium">{{ product.seller_name }}</span></p>
+            <div class="text-4xl font-bold text-red-500 mb-4">NT$ {{ product.price }}</div>
+            <div class="border-t border-b border-gray-200 py-4 mb-4">
+                <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+            </div>
+            <div class="flex items-center space-x-4 mb-6">
+                <span class="text-gray-600">庫存狀態:</span>
+                {% if product.stock > 0 %}
+                <span class="text-green-600 font-semibold"><i class="fas fa-check-circle"></i> 有庫存 ({{ product.stock }}件)</span>
+                {% else %}
+                <span class="text-red-600 font-semibold"><i class="fas fa-times-circle"></i> 缺貨</span>
+                {% endif %}
+            </div>
+            {% if product.stock > 0 %}
+            <form action="/cart/add" method="POST" class="flex items-center space-x-4">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <div>
+                    <label class="text-sm text-gray-600">數量:</label>
+                    <select name="quantity" class="ml-2 px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary text-lg px-8 py-3">
+                    <i class="fas fa-cart-plus mr-2"></i>加入購物車
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

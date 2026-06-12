@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}訂單詳情 - E-Shop{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <a href="/orders" class="text-indigo-600 hover:underline mb-4 inline-block">
+        <i class="fas fa-arrow-left mr-2"></i>返回訂單列表
+    </a>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h1 class="text-2xl font-bold">訂單詳情</h1>
+                <p class="text-sm text-gray-500 mt-1">訂單編號: {{ order.id }}</p>
+                <p class="text-sm text-gray-500">下單時間: {{ order.created_at|date(format="%Y-%m-%d %H:%M") }}</p>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold text-red-500">NT$ {{ order.total }}</div>
+                {% if order.status == "paid" %}
+                <span class="text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">已付款</span>
+                {% elif order.status == "shipped" %}
+                <span class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">已出貨</span>
+                {% elif order.status == "delivered" %}
+                <span class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full">已送達</span>
+                {% elif order.status == "cancelled" %}
+                <span class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full">已取消</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <p class="text-sm text-gray-500">付款方式</p>
+                <p class="font-medium">
+                    {% if order.payment_method == "cod" %}
+                    <i class="fas fa-money-bill-wave text-green-500 mr-1"></i>貨到付款
+                    {% else %}
+                    <i class="fas fa-credit-card text-blue-500 mr-1"></i>信用卡
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">收貨地址</p>
+                <p class="font-medium">{{ order.shipping_address }}</p>
+            </div>
+        </div>
+
+        <h2 class="font-bold text-lg mb-4">商品列表</h2>
+        <div class="space-y-3">
+            {% for item in items %}
+            <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                <img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-16 h-16 object-cover rounded">
+                <div class="flex-1">
+                    <p class="font-medium">{{ item.product_name }}</p>
+                    <p class="text-sm text-gray-500">單價: NT$ {{ item.price }} x {{ item.quantity }}</p>
+                </div>
+                <p class="font-bold text-red-500">NT$ {{ item.price * item.quantity }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

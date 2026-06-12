@@ -1,0 +1,7 @@
+let post = {
+    id: 1,
+    title: "Hello World",
+    content: "Markdown content"
+};
+console.log(post.title);
+console.log(post["title"]);

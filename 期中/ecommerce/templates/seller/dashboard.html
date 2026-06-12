@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}賣家中心 - E-Shop{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6"><i class="fas fa-tachometer-alt mr-2"></i>賣家中心</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">商品數量</p>
+                    <p class="text-3xl font-bold text-indigo-600">{{ product_count }}</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-box text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+            <a href="/seller/products" class="text-indigo-600 text-sm mt-3 inline-block hover:underline">
+                管理商品 <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">訂單數量</p>
+                    <p class="text-3xl font-bold text-green-600">{{ order_count }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-bag text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <a href="/seller/orders" class="text-green-600 text-sm mt-3 inline-block hover:underline">
+                查看訂單 <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">總收入</p>
+                    <p class="text-3xl font-bold text-red-500">NT$ {{ revenue }}</p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-red-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex space-x-4">
+        <a href="/seller/products" class="btn-primary"><i class="fas fa-box mr-2"></i>商品管理</a>
+        <a href="/seller/products/new" class="btn-success"><i class="fas fa-plus mr-2"></i>新增商品</a>
+        <a href="/seller/orders" class="btn-secondary"><i class="fas fa-shopping-bag mr-2"></i>訂單管理</a>
+    </div>
+</div>
+{% endblock %}

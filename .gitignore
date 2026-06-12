@@ -1,0 +1,15 @@
+# Rust build artifacts
+期中/ecommerce/target/
+期中/ecommerce/ecommerce
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

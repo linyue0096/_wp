@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}商品管理 - E-Shop{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold"><i class="fas fa-box mr-2"></i>商品管理</h1>
+        <a href="/seller/products/new" class="btn-success"><i class="fas fa-plus mr-2"></i>新增商品</a>
+    </div>
+
+    {% if products %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">商品</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">分類</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">價格</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">庫存</th>
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">操作</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for product in products %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ product.image_url }}" class="w-12 h-12 object-cover rounded">
+                            <span class="font-medium">{{ product.name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">{{ product.category_name }}</td>
+                    <td class="px-4 py-3 font-medium text-red-500">NT$ {{ product.price }}</td>
+                    <td class="px-4 py-3">
+                        {% if product.stock > 0 %}
+                        <span class="text-green-600">{{ product.stock }}</span>
+                        {% else %}
+                        <span class="text-red-600">缺貨</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex space-x-2">
+                            <a href="/seller/products/{{ product.id }}/edit" class="text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="/seller/products/{{ product.id }}/delete" method="POST" style="display:inline;">
+                                <button type="submit" class="text-red-500 hover:text-red-700"
+                                        onclick="return confirm('確定刪除此商品？')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+        <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-xl text-gray-500 mb-4">尚無商品</h2>
+        <a href="/seller/products/new" class="btn-primary"><i class="fas fa-plus mr-2"></i>新增第一個商品</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

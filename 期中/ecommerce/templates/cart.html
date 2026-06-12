@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}購物車 - E-Shop{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6"><i class="fas fa-shopping-cart mr-2"></i>購物車</h1>
+
+    {% if items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-4">
+            {% for item in items %}
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                <a href="/product/{{ item.product_slug }}">
+                    <img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-20 h-20 object-cover rounded-lg">
+                </a>
+                <div class="flex-1">
+                    <a href="/product/{{ item.product_slug }}">
+                        <h3 class="font-semibold text-gray-800 hover:text-indigo-600">{{ item.product_name }}</h3>
+                    </a>
+                    <p class="text-red-500 font-bold">NT$ {{ item.price }}</p>
+                </div>
+                <form action="/cart/update/{{ item.id }}" method="POST" class="flex items-center gap-2">
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="{{ item.stock }}"
+                           class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm">
+                    <button type="submit" class="text-indigo-600 hover:text-indigo-800 text-sm">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </form>
+                <div class="text-right min-w-[80px]">
+                    <p class="font-bold text-gray-800">NT$ {{ item.price * item.quantity }}</p>
+                </div>
+                <form action="/cart/remove/{{ item.id }}" method="POST">
+                    <button type="submit" class="text-red-400 hover:text-red-600">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-fit">
+            <h3 class="text-lg font-bold mb-4">訂單摘要</h3>
+            <div class="space-y-2 text-sm">
+                {% for item in items %}
+                <div class="flex justify-between text-gray-600">
+                    <span>{{ item.product_name }} x{{ item.quantity }}</span>
+                    <span>NT$ {{ item.price * item.quantity }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="border-t mt-4 pt-4">
+                <div class="flex justify-between text-lg font-bold">
+                    <span>總計</span>
+                    <span class="text-red-500">NT$ {{ total }}</span>
+                </div>
+            </div>
+            <a href="/checkout" class="w-full btn-primary text-center block mt-6 py-3">
+                <i class="fas fa-credit-card mr-2"></i>前往結帳
+            </a>
+            <a href="/" class="w-full btn-secondary text-center block mt-2 py-2">
+                <i class="fas fa-arrow-left mr-2"></i>繼續購物
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-xl text-gray-500 mb-4">購物車是空的</h2>
+        <a href="/" class="btn-primary"><i class="fas fa-store mr-2"></i>去購物</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
